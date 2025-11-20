@@ -1,0 +1,33 @@
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab
+    restart: unless-stopped
+    hostname: 'gitlab.local'
+    shm_size: '256m'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8080'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['time_zone'] = 'Asia/Shanghai'
+        nginx['redirect_http_to_https'] = false
+        letsencrypt['enable'] = false
+        # 可选：首次启动设置 root 密码（建议启动后再修改/删除）
+        # gitlab_rails['initial_root_password'] = 'ChangeMe123!'
+    ports:
+      - '8080:80'
+      - '8443:443'
+      - '2222:22'
+    volumes:
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'
+    networks:
+      - gitlab_net
+
+networks:
+  gitlab_net:
+    driver: bridge
+
+
+

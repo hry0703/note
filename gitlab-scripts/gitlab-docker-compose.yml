@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab-ce
+    restart: unless-stopped
+    hostname: 'gitlab.local'
+    shm_size: '256m'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        # 基础配置
+        external_url 'http://localhost:8080'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['time_zone'] = 'Asia/Shanghai'
+        
+        # 禁用 HTTPS 重定向（开发环境）
+        nginx['redirect_http_to_https'] = false
+        letsencrypt['enable'] = false
+        
+        # 性能优化（适合小内存环境）
+        postgresql['shared_buffers'] = "128MB"
+        postgresql['max_connections'] = 100
+        sidekiq['max_concurrency'] = 10
+        
+        # 安全配置
+        gitlab_rails['gitlab_signup_enabled'] = false
+        gitlab_rails['session_expire_delay'] = 3600
+        
+        # 首次启动设置 root 密码（可选，建议启动后修改）
+        # gitlab_rails['initial_root_password'] = 'ChangeMe123!'
+        
+        # 备份配置
+        gitlab_rails['backup_keep_time'] = 604800  # 7天
+        gitlab_rails['backup_path'] = "/var/opt/gitlab/backups"
+        
+        # 邮件配置（可选，根据需要启用）
+        # gitlab_rails['smtp_enable'] = true
+        # gitlab_rails['smtp_address'] = "smtp.gmail.com"
+        # gitlab_rails['smtp_port'] = 587
+        # gitlab_rails['smtp_user_name'] = "your-email@gmail.com"
+        # gitlab_rails['smtp_password'] = "your-app-password"
+        # gitlab_rails['smtp_domain'] = "gmail.com"
+        # gitlab_rails['smtp_authentication'] = "login"
+        # gitlab_rails['smtp_enable_starttls_auto'] = true
+        # gitlab_rails['gitlab_email_from'] = 'your-email@gmail.com'
+        
+    ports:
+      - '18080:80'     # HTTP 访问端口 (避免与 Jenkins 冲突)
+      - '18443:443'    # HTTPS 访问端口
+      - '12222:22'     # SSH Git 克隆端口
+    volumes:
+      - './gitlab/config:/etc/gitlab'
+      - './gitlab/logs:/var/log/gitlab'
+      - './gitlab/data:/var/opt/gitlab'
+      - './gitlab/backups:/var/opt/gitlab/backups'
+    networks:
+      - gitlab_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/-/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+
+networks:
+  gitlab_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  gitlab_config:
+    driver: local
+  gitlab_logs:
+    driver: local
+  gitlab_data:
+    driver: local
+  gitlab_backups:
+    driver: local

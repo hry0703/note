@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: 'jenkins/jenkins:lts'
+    container_name: jenkins
+    restart: unless-stopped
+    user: root  # 以 root 用户运行，避免权限问题
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JENKINS_OPTS=--httpPort=8080
+    ports:
+      - '19080:8080'     # Jenkins Web 界面 (避免与 GitLab 冲突)
+    volumes:
+      - './jenkins/home:/var/jenkins_home'
+      - './jenkins/docker-certs-ca:/certs/ca:ro'
+      - './jenkins/docker-certs-client:/certs/client:ro'
+      - '/var/run/docker.sock:/var/run/docker.sock'  # 允许 Jenkins 使用 Docker
+    networks:
+      - jenkins_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+
+networks:
+  jenkins_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.24.0.0/16
+
+volumes:
+  jenkins_home:
+    driver: local
