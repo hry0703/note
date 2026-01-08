@@ -118,6 +118,12 @@ poetry add git+https://github.com/user/repo.git
 
 # 添加本地包
 poetry add ./my-package
+
+# 升级到最新版本
+poetry add langchain@latest
+
+# 升级到最新版本或者使用
+poetry update langchain
 ```
 
 ### 移除依赖
