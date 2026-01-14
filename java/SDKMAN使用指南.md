@@ -263,6 +263,349 @@ sdk env
 # 环境变量自动更新为项目指定的版本
 ```
 
+---
+
+## 🎯 每个项目使用不同的 Java 版本
+
+### 为什么需要项目级别的 Java 版本管理？
+
+在实际开发中，你可能需要：
+- 项目 A 使用 Java 11（旧项目）
+- 项目 B 使用 Java 17（新项目）
+- 项目 C 使用 Java 21（最新项目）
+
+**全局切换的问题：**
+- ❌ 每次切换项目都要手动切换 Java 版本
+- ❌ 容易忘记切换，导致编译错误
+- ❌ 多个项目同时开发时容易混乱
+
+**项目级别管理的优势：**
+- ✅ 每个项目自动使用指定的 Java 版本
+- ✅ 进入项目目录时自动切换
+- ✅ 不同项目互不干扰
+
+---
+
+### 方法 1：使用 .sdkmanrc 文件（推荐）
+
+#### 步骤 1：在项目根目录创建 .sdkmanrc 文件
+
+```bash
+# 进入项目目录
+cd /path/to/your-project
+
+# 创建 .sdkmanrc 文件
+cat > .sdkmanrc << EOF
+java=17.0.2-tem
+maven=3.9.4
+EOF
+```
+
+**文件内容示例：**
+```
+java=17.0.2-tem
+maven=3.9.4
+gradle=8.4
+```
+
+#### 步骤 2：手动激活项目配置
+
+```bash
+# 进入项目目录
+cd /path/to/your-project
+
+# 激活项目配置（切换到项目指定的版本）
+sdk env
+
+# 验证当前版本
+java -version
+mvn -version
+```
+
+#### 步骤 3：配置自动激活（可选）
+
+**方法 A：使用 direnv（推荐）**
+
+```bash
+# 安装 direnv
+brew install direnv  # macOS
+
+# 配置 shell（添加到 ~/.zshrc 或 ~/.bashrc）
+eval "$(direnv hook zsh)"
+
+# 在项目根目录创建 .envrc 文件
+echo 'eval "$(sdk env)"' > .envrc
+
+# 允许 direnv
+direnv allow
+```
+
+**效果：**
+- 进入项目目录时自动切换 Java 版本
+- 离开项目目录时自动恢复默认版本
+
+**方法 B：使用 shell 别名**
+
+```bash
+# 添加到 ~/.zshrc 或 ~/.bashrc
+alias cd='cd_with_sdk() { builtin cd "$@" && [ -f .sdkmanrc ] && sdk env; }; cd_with_sdk'
+
+# 重新加载配置
+source ~/.zshrc
+```
+
+---
+
+### 方法 2：使用 .java-version 文件（兼容其他工具）
+
+除了 `.sdkmanrc`，SDKMAN 也支持 `.java-version` 文件（兼容 jenv、asdf 等工具）：
+
+```bash
+# 在项目根目录创建 .java-version 文件
+echo "17.0.2-tem" > .java-version
+
+# 激活
+sdk env
+```
+
+**文件内容：**
+```
+17.0.2-tem
+```
+
+---
+
+### 方法 3：Maven 项目中的 Java 版本配置
+
+在 Maven 项目中，可以在 `pom.xml` 中指定 Java 版本：
+
+```xml
+<properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <java.version>17</java.version>
+</properties>
+```
+
+**配合 SDKMAN 使用：**
+
+```bash
+# 1. 在项目根目录创建 .sdkmanrc
+echo "java=17.0.2-tem" > .sdkmanrc
+
+# 2. 激活项目配置
+sdk env
+
+# 3. 验证
+java -version  # 应该显示 Java 17
+mvn compile    # Maven 会使用 Java 17 编译
+```
+
+---
+
+### 方法 4：Gradle 项目中的 Java 版本配置
+
+在 Gradle 项目中，可以在 `build.gradle` 中指定 Java 版本：
+
+```groovy
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+```
+
+**配合 SDKMAN 使用：**
+
+```bash
+# 1. 在项目根目录创建 .sdkmanrc
+echo "java=17.0.2-tem" > .sdkmanrc
+echo "gradle=8.4" >> .sdkmanrc
+
+# 2. 激活项目配置
+sdk env
+
+# 3. 验证
+java -version
+gradle -version
+```
+
+---
+
+### 实际使用示例
+
+#### 场景：同时开发多个项目
+
+```bash
+# 项目 A：使用 Java 11
+cd ~/projects/old-project
+echo "java=11.0.19-tem" > .sdkmanrc
+sdk env
+java -version  # 显示 Java 11
+
+# 项目 B：使用 Java 17
+cd ~/projects/new-project
+echo "java=17.0.2-tem" > .sdkmanrc
+sdk env
+java -version  # 显示 Java 17
+
+# 项目 C：使用 Java 21
+cd ~/projects/latest-project
+echo "java=21.0.1-tem" > .sdkmanrc
+sdk env
+java -version  # 显示 Java 21
+```
+
+#### 场景：团队协作
+
+```bash
+# 1. 在项目根目录创建 .sdkmanrc
+cat > .sdkmanrc << EOF
+java=17.0.2-tem
+maven=3.9.4
+EOF
+
+# 2. 将 .sdkmanrc 提交到 Git（团队成员共享配置）
+git add .sdkmanrc
+git commit -m "Add SDKMAN configuration"
+git push
+
+# 3. 团队成员克隆项目后
+git clone https://github.com/team/project.git
+cd project
+sdk env  # 自动切换到项目指定的 Java 版本
+```
+
+---
+
+### IDE 中的项目级别 Java 版本配置
+
+#### IntelliJ IDEA
+
+1. **项目级别配置：**
+   - File → Project Structure → Project
+   - 设置 "SDK" 和 "Language level"
+
+2. **模块级别配置：**
+   - File → Project Structure → Modules
+   - 为每个模块设置 "Language level"
+
+3. **Maven 项目：**
+   - IDEA 会自动读取 `pom.xml` 中的 Java 版本配置
+   - 配合 SDKMAN 使用更顺畅
+
+#### VS Code
+
+1. **安装扩展：**
+   - Java Extension Pack
+   - Language Support for Java
+
+2. **配置：**
+   - 在项目根目录创建 `.vscode/settings.json`
+   ```json
+   {
+     "java.configuration.runtimes": [
+       {
+         "name": "JavaSE-17",
+         "path": "/Users/你的用户名/.sdkman/candidates/java/17.0.2-tem"
+       }
+     ],
+     "java.jdt.ls.java.home": "/Users/你的用户名/.sdkman/candidates/java/17.0.2-tem"
+   }
+   ```
+
+---
+
+### 验证和调试
+
+```bash
+# 1. 查看当前项目配置
+cat .sdkmanrc
+
+# 2. 查看当前使用的 Java 版本
+sdk current java
+
+# 3. 查看 Java 路径
+which java
+echo $JAVA_HOME
+
+# 4. 验证 Maven 使用的 Java 版本
+mvn -version
+
+# 5. 验证 Gradle 使用的 Java 版本
+gradle -version
+```
+
+---
+
+### 常见问题
+
+**Q: 为什么 `sdk env` 后版本没有切换？**
+
+**A:** 检查以下几点：
+```bash
+# 1. 确认 .sdkmanrc 文件存在
+ls -la .sdkmanrc
+
+# 2. 确认文件内容正确
+cat .sdkmanrc
+
+# 3. 确认指定的版本已安装
+sdk list java | grep installed
+
+# 4. 重新执行 sdk env
+sdk env
+```
+
+**Q: 如何为不同项目设置不同的 Maven 版本？**
+
+**A:** 在 `.sdkmanrc` 中同时指定：
+```
+java=17.0.2-tem
+maven=3.9.4
+```
+
+**Q: 离开项目目录后如何恢复默认版本？**
+
+**A:** 
+```bash
+# 方法 1：手动切换
+sdk default java 17.0.2-tem
+
+# 方法 2：使用 direnv（自动恢复）
+# 配置 direnv 后，离开目录会自动恢复
+```
+
+**Q: 可以在 .sdkmanrc 中使用通配符吗？**
+
+**A:** 可以，但建议使用完整版本号：
+```
+# 可以使用
+java=17.0.2-tem
+
+# 也可以使用（但可能不稳定）
+java=17-tem
+```
+
+---
+
+### 最佳实践
+
+1. **为每个项目创建 .sdkmanrc**
+   - 明确指定项目需要的 Java 版本
+   - 提交到 Git，团队成员共享
+
+2. **使用 direnv 自动切换**
+   - 进入项目自动切换版本
+   - 离开项目自动恢复默认
+
+3. **在 pom.xml/build.gradle 中也指定版本**
+   - 双重保障，确保版本一致
+   - IDE 可以正确识别
+
+4. **定期更新 .sdkmanrc**
+   - 项目升级 Java 版本时同步更新
+   - 保持配置一致性
+
 #### 常见问题
 
 **Q: 为什么安装后 `java -version` 还是显示旧版本？**
