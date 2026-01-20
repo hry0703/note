@@ -538,7 +538,6 @@ public class Example {
 ```
 
 ### 继承
-
 ```java
 // 父类
 public class Animal {
@@ -986,5 +985,3 @@ public class UserService {
 ---
 
 **祝学习顺利！💪**
-
-*最后更新：2024年*

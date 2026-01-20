@@ -49,6 +49,20 @@
                 </configuration>
             </plugin>
             
+            <!-- Maven JAR 插件 - 配置可执行 JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.hry.firstjava.App</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
             <!-- Maven 执行插件（用于运行主类） -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
