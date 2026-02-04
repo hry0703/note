@@ -1,0 +1,5 @@
+{
+  "code-runner.executorMap": {
+    "java": "cd $workspaceRoot/java-project && mvn exec:java"
+  }
+}
