@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "rag-agent"
+version = "0.1.0"
+description = "文档问答 RAG Agent"
+authors = ["Eden.huang <rongyao.huang@connext.com.cn>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11"
+fastapi = ">=0.100.0"
+uvicorn = {extras = ["standard"], version = ">=0.20.0"}
+openai = ">=1.0.0"
+numpy = ">=1.24.0"
+python-dotenv = ">=1.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
