@@ -80,4 +80,4 @@ def ask(req: AskRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    uvicorn.run(app, host=["::", "0.0.0.0"], port=8002, reload=True)  # 双栈：同时监听 IPv4 和 IPv6

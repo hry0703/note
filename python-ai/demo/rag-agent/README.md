@@ -13,11 +13,21 @@ cd /Users/edenhuang/Desktop/脚本/python-ai/demo/rag-agent
 ### 2. 创建虚拟环境并安装依赖
 
 ```bash
+
+pip install poetry
+
 # 若报错 python 找不到，先执行：
 poetry env use $(which python3)
 
 # 安装依赖（仅安装到本项目 .venv）
+# 如果希望项目下有 .venv 目录，可以执行：
+poetry config virtualenvs.in-project true
+poetry env remove python
 poetry install
+
+#激活本地环境
+source .venv/Scripts/activate
+
 ```
 
 ### 3. 配置环境变量
@@ -32,7 +42,10 @@ cp .env.example .env
 ### 4. 启动服务
 
 ```bash
-poetry run python -m uvicorn main:app --reload --host 0.0.0.0 --port 8002
+# 双栈（IPv4+IPv6），任选其一：
+poetry run python main.py
+# 或
+poetry run python -m uvicorn main:app --reload --host "" --port 8002
 ```
 
 访问 http://localhost:8002/docs 进行问答测试。
